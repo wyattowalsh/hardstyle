@@ -1,0 +1,48 @@
+[project]
+name = "hardstyle"
+version = "0.1.0"
+description = "hardstyle"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ipykernel>=6.29.5",
+    "loguru>=0.7.3",
+    "nbdime>=4.0.2",
+    "pandas>=2.2.3",
+    "pydantic>=2.11.4",
+    "pydantic-settings>=2.7.1",
+    "python-dotenv>=1.1.0",
+    "python3-discogs-client>=2.8",
+    "rich>=14.0.0",
+    "tenacity>=9.1.2",
+    "tqdm>=4.67.1",
+    "typer>=0.15.3",
+]
+
+[dependency-groups]
+format = [
+    "autoflake>=2.3.1",
+    "autopep8>=2.3.2",
+    "black>=25.1.0",
+    "isort>=6.0.1",
+    "yapf>=0.43.0",
+]
+lint = [
+    "mypy>=1.15.0",
+    "pylint>=3.3.6",
+    "ruff>=0.11.7",
+]
+test = [
+    "hypothesis>=6.131.9",
+    "pytest>=8.3.5",
+    "pytest-benchmark>=5.1.0",
+    "pytest-cov>=6.1.1",
+    "pytest-emoji>=0.2.0",
+    "pytest-html>=4.1.1",
+    "pytest-icdiff>=0.9",
+    "pytest-instafail>=0.5.0",
+    "pytest-mock>=3.14.0",
+    "pytest-sugar>=1.0.0",
+    "pytest-timeout>=2.3.1",
+    "pytest-xdist>=3.6.1",
+]

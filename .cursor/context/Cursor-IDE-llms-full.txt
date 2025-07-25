@@ -1,0 +1,270 @@
+
+# Cursor AI IDE – Comprehensive LLM‑Friendly Reference (July 2025)
+
+This document is a **July 2025 snapshot** of the features, workflows and rules built into the Cursor AI IDE.  It is structured to be easily parsed by downstream language models: high‑level summaries followed by detailed bullet lists, tables and code samples.  All content is derived from official Cursor documentation and changelogs available up to **3 July 2025**.  Use this file to familiarise yourself with the entire Cursor ecosystem or to feed it into an LLM that will assist you within Cursor.
+
+---
+
+## 1 Overview
+
+Cursor is an AI‑augmented code editor based on VS Code.  It unifies fast autocompletion, natural‑language edits, an autonomous agent, context‑aware rules, code search and cloud‑hosted agents.  At a glance:
+
+- **Autocompletion (`Tab`)** – a multi‑line suggestion model that predicts large edits and cross‑file changes.  Accept suggestions with `Tab`, reject with `Esc`, or partially accept with `Ctrl+Arrow‑Right`https://docs.cursor.com/tab/overview#:~:text=Suggestionshttps://docs.cursor.com/tab/overview#:~:text=Partial%20Accepts.  Settings allow enabling/disabling suggestions in comments and automatic import insertionhttps://docs.cursor.com/tab/overview#:~:text=Cursor%20Tab%20Context,import%20for%20Python%20projects.
+- **Inline Edit (Ctrl + K)** – edit code or generate new code by describing changes in natural language.  When text is selected, Cursor edits only that region; without a selection, it inserts code at the cursorhttps://docs.cursor.com/inline-edit/overview#:~:text=With%20code%20selected%2C%20,code%20based%20on%20your%20instructions.  Quick questions use `Alt+Enter`, full‑file edits use `Ctrl+Shift+Enter`, and `Ctrl+L` sends code to the Chat agenthttps://docs.cursor.com/inline-edit/overview#:~:text=Quick%20Question.  In the terminal, `Ctrl+K` generates commandshttps://docs.cursor.com/inline-edit/terminal#:~:text=Terminal.
+- **Agent** – a chat‑like autonomous assistant that plans multi‑file refactors, runs terminal commands, fetches code, applies diffs and interacts with your repositoryhttps://docs.cursor.com/agent/overview#:~:text=Assistant%20for%20autonomous%20coding%20tasks%2C,terminal%20commands%2C%20and%20code%20editing.  Modes include **Agent**, **Ask**, **Manual** and **Custom**https://docs.cursor.com/agent/modes#:~:text=Mode%20For%20Capabilities%20Tools%20Agent,defined%20capabilities%20Configurable.  The agent automatically creates to‑do lists, manages queued messages and exposes tools such as search, edit and terminalhttps://docs.cursor.com/agent/planning#:~:text=Agent%20can%20plan%20ahead%20and,easier%20to%20understand%20and%20track.
+- **Background agents** – asynchronous agents that run in remote linux machines.  They clone your repo, run tasks, and push commits back to your repository.  You can watch progress, send follow‑ups, or enter the remote machine at any timehttps://docs.cursor.com/background-agent#:~:text=Setup.  A `environment.json` file specifies the environment snapshot, install commands, start commands, ports and terminal processeshttps://docs.cursor.com/background-agent#:~:text=When%20setting%20up%20a%20new,alive%20when%20the%20agent%20startshttps://cursor.com/schemas/environment.schema.json.
+- **Web & Mobile** – run agents from any browser at `cursor.com/agents` or install the Progressive Web App on iOS/Androidhttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Cursor%E2%80%99s%20Agent%20on%20web%20brings,com%2Fagents.  You can connect GitHub, run tasks, review diffs and collaborate with teammateshttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Team%20collaboration.
+- **Code indexing & search** – Cursor computes embeddings for each file and PR; search via `@` references returns relevant code, docs and git historyhttps://docs.cursor.com/context/codebase-indexing#:~:text=How%20Cursor%20learns%20your%20codebase,for%20better%20understanding.
+- **Rules for AI** – persistent instructions that shape how models behave.  Rules exist at global (user) and project levels; they include metadata such as glob patterns and can be always‑applied or context‑awarehttps://docs.cursor.com/context/rules#:~:text=Project%20rules.  Memories are automatically extracted rules from previous conversationshttps://docs.cursor.com/context/memories#:~:text=Memories%20are%20automatically%20generated%20rules,and%20maintain%20context%20across%20sessions.  Bugbot rules provide code‑review guidancehttps://docs.cursor.com/bugbot#:~:text=Rules.
+- **Model Context Protocol (MCP)** – a protocol that allows Cursor to call external tools or services via JSON and streamable HTTP/stdio.  Tools are defined in `mcp.json` and appear in the Agent interface with optional auto‑runhttps://docs.cursor.com/context/mcp#:~:text=Why%20use%20MCP%3F.
+- **Additional tools** – Slack integration, CLI commands (`cursor`), `@` symbols for context injection, code search, PR search, MCP servers, and Terminal quick commands.
+
+---
+
+## 2 Editing tools
+
+### 2.1 Autocompletion (Tab)
+
+**Tab** is Cursor’s autocompletion model.  Unlike typical single‑token completions, Tab suggests multi‑line edits, imports and cross‑file changeshttps://docs.cursor.com/tab/overview#:~:text=Tab.  Accept suggestions with `Tab` to insert the ghost text, or press `Esc` to dismisshttps://docs.cursor.com/tab/overview#:~:text=Suggestions.  To accept a portion of a suggestion, press `Ctrl+Arrow‑Right`; each keypress accepts one word or segmenthttps://docs.cursor.com/tab/overview#:~:text=Partial%20Accepts.  Customize behaviour in settings:
+
+| Setting | Purpose |
+|---|---|
+| Disable suggestions in comments | Prevent Tab from suggesting within commentshttps://docs.cursor.com/tab/overview#:~:text=Cursor%20Tab%20Context,import%20for%20Python%20projects |
+| Auto‑import | Automatically add missing import statements when accepting completionshttps://docs.cursor.com/tab/overview#:~:text=Cursor%20Tab%20Context,import%20for%20Python%20projects |
+| Allow whitespace‑only suggestions | Show completions even when nothing has been typedhttps://docs.cursor.com/tab/overview#:~:text=Cursor%20Tab%20Context,import%20for%20Python%20projects |
+| Enable partial accept | Enable `Ctrl+Arrow‑Right` partial acceptancehttps://docs.cursor.com/tab/overview#:~:text=Cursor%20Tab%20Context,import%20for%20Python%20projects |
+
+Tab learns from your project; cross‑file suggestions may jump across files or edit multiple functions.  You can also disable or enable Tab entirely.
+
+### 2.2 Inline Edit (Ctrl + K)
+
+Inline Edit opens an input bar to describe code changes or ask questions.  Its behaviour depends on the selection and modifiers:
+
+- **Selected code** – edit only the selection; answer questions about the selectionhttps://docs.cursor.com/inline-edit/overview#:~:text=With%20code%20selected%2C%20,code%20based%20on%20your%20instructions.
+- **No selection** – insert new code at the cursor positionhttps://docs.cursor.com/inline-edit/overview#:~:text=With%20code%20selected%2C%20,code%20based%20on%20your%20instructions.
+- **Quick question** – press `Alt+Enter` after typing a question; Cursor answers without editinghttps://docs.cursor.com/inline-edit/overview#:~:text=Quick%20Question.
+- **Full‑file edit** – press `Ctrl+Shift+Enter` to edit the entire filehttps://docs.cursor.com/inline-edit/overview#:~:text=Quick%20Question.
+- **Send to Chat** – press `Ctrl+L` to send the selected code and prompt to the Chat agent for multi‑file or more complex taskshttps://docs.cursor.com/inline-edit/overview#:~:text=Send%20to%20Chat.
+- **Follow‑up instructions** – after an edit, you can add follow‑up prompts to refine results; the model only sees your new instruction and the diff producedhttps://docs.cursor.com/inline-edit/overview#:~:text=Follow.
+
+In the integrated terminal, `Ctrl+K` generates shell commands based on natural‑language descriptions; you can then review and run themhttps://docs.cursor.com/inline-edit/terminal#:~:text=Terminal.
+
+---
+
+## 3 Agent & Modes
+
+### 3.1 Modes
+
+Cursor’s Agent offers multiple modes tailored to different workflowshttps://docs.cursor.com/agent/modes#:~:text=Mode%20For%20Capabilities%20Tools%20Agent,defined%20capabilities%20Configurable:
+
+| Mode | Purpose | Capabilities & tools |
+|---|---|---|
+| **Agent** | Complex tasks and multi‑file refactoring | Full autonomy; uses search, edit, terminal and diff tools. Creates and executes to‑do listshttps://docs.cursor.com/agent/overview#:~:text=Assistant%20for%20autonomous%20coding%20tasks%2C,terminal%20commands%2C%20and%20code%20editinghttps://docs.cursor.com/agent/planning#:~:text=Agent%20can%20plan%20ahead%20and,easier%20to%20understand%20and%20track. |
+| **Ask** | Learning and exploration | Read‑only; can search and inspect code but does not change fileshttps://docs.cursor.com/agent/modes#:~:text=Mode%20For%20Capabilities%20Tools%20Agent,defined%20capabilities%20Configurable. |
+| **Manual** | Precise targeted edits | Only edits files you manually attach; no side effectshttps://docs.cursor.com/agent/modes#:~:text=Manual. |
+| **Custom** | User‑defined workflows | Select which tools are allowed; combine search, edit, terminal as neededhttps://docs.cursor.com/agent/modes#:~:text=Custom. |
+
+Switch between modes via the mode picker or `Ctrl+.` and configure keyboard shortcuts in settingshttps://docs.cursor.com/agent/modes#:~:text=Switching%20modes.
+
+### 3.2 Planning & queued messages
+
+When given a high‑level task, the Agent breaks it into a structured to‑do listhttps://docs.cursor.com/agent/planning#:~:text=Agent%20can%20plan%20ahead%20and,easier%20to%20understand%20and%20track.  Each subtask may involve editing code, searching, running commands or producing output.  To‑dos are visible in the chat interface and, if Slack integration is enabled, in Slackhttps://docs.cursor.com/agent/planning#:~:text=Visibility.  You can queue follow‑up messages by typing them while the Agent works; they execute sequentially after the current task finisheshttps://docs.cursor.com/agent/planning#:~:text=Queued%20messages.  Use the arrow keys to reorder messages or `Alt+Enter` to send a message immediately and bypass the queuehttps://docs.cursor.com/agent/planning#:~:text=Override%20the%20queue.
+
+### 3.3 Tools within the Agent
+
+The Agent seamlessly integrates several tools:
+
+- **Search & Codebase indexing** – perform semantic search across files, PRs and documentation; use `@` symbols to insert code snippets, docs or git historyhttps://docs.cursor.com/context/codebase-indexing#:~:text=PR%20searchhttps://docs.cursor.com/context/@-symbols/overview#:~:text=Reference%20code%2C%20files%2C%20and%20documentation,using%20%40%20symbols.
+- **Edit & Apply** – propose code edits using natural language; review diffs and choose which changes to applyhttps://docs.cursor.com/agent/overview#:~:text=Apply%20Changes.  The diff viewer highlights additions and deletions; you must approve changes before they apply.
+- **Terminal** – run shell commands in the context of your repository; the Agent may ask for confirmation before running commandshttps://docs.cursor.com/agent/overview#:~:text=Agent%20executes%20terminal%20commands%2C%20monitors,or%20require%20confirmation%20for%20safety.
+- **Checkpoints** – automatic snapshots of your workspace after each change; restore previous states if neededhttps://docs.cursor.com/agent/overview#:~:text=Checkpoints.
+- **Chat tabs & history** – maintain multiple conversations, review past chats (`Alt+Ctrl+’`) and export sessions to Markdownhttps://docs.cursor.com/agent/overview#:~:text=Chat%20Tabs.
+
+---
+
+## 4 Background Agents & Remote Environments
+
+Background agents run asynchronously in remote Linux machines.  They are ideal for long‑running tasks, CI pipelines or compute‑heavy operations.  Key aspectshttps://docs.cursor.com/background-agent#:~:text=Setup:
+
+1. **Starting and managing** – Press `Ctrl+E` to open the background agent panel.  Spawn new agents, list their status and select one to view its logs.  You can enter the remote machine via a console at any timehttps://docs.cursor.com/background-agent#:~:text=How%20to%20Use.
+2. **Repository cloning** – Background agents clone your repository from GitHub and check out a separate branch to avoid interfering with your local statehttps://docs.cursor.com/background-agent#:~:text=Setup.
+3. **Environment setup** – Use `.cursor/environment.json` to define how the remote environment is built and started.  The file is committed to the repo (or stored privately) and supports the following keyshttps://docs.cursor.com/background-agent#:~:text=When%20setting%20up%20a%20new,alive%20when%20the%20agent%20startshttps://cursor.com/schemas/environment.schema.json:
+   - `snapshot`: ID of a saved base image or reference to a devcontainer snapshot.
+   - `install`: shell command to install dependencies before starting (e.g., `npm install`)https://docs.cursor.com/background-agent#:~:text=When%20setting%20up%20a%20new,command%20runs.%20Design%20it.
+   - `start`: command to run after installation (e.g., starting Docker or prebuild tasks)https://docs.cursor.com/background-agent#:~:text=After%20running%20,in%20the.
+   - `terminals`: list of terminal processes to run continuously, each with `name`, `command` and optional `description`https://docs.cursor.com/background-agent#:~:text=After%20running%20,as%20a%20terminalhttps://cursor.com/schemas/environment.schema.json#:~:text=,.
+   - `ports`: array of ports to expose from the container, each with a `name` and `port`https://cursor.com/schemas/environment.schema.json#:~:text=,%7D%20%7D.
+   - `repositoryDependencies`: list of dependent repositories requiring GitHub accesshttps://cursor.com/schemas/environment.schema.json#:~:text=,.
+   - `build`: optional object with `dockerfile` and `context` for building a custom container imagehttps://cursor.com/schemas/environment.schema.json#:~:text=,false.
+   - `agentCanUpdateSnapshot`: boolean controlling whether agents may update the base snapshothttps://cursor.com/schemas/environment.schema.json#:~:text=,%7D.
+
+   The install command is cached to speed up startup; design it to be idempotenthttps://docs.cursor.com/background-agent#:~:text=When%20setting%20up%20a%20new,alive%20when%20the%20agent%20starts.  After `install`, the `start` command and terminal processes are run concurrentlyhttps://docs.cursor.com/background-agent#:~:text=Startup%20Commands.
+4. **Pricing & security** – Background agents are available on Pro plans; pricing details are in the account section.  Agents run in isolated containers and do not train on your codehttps://docs.cursor.com/background-agent#:~:text=Setup.
+
+---
+
+## 5 Web & Mobile Agents
+
+Cursor provides a web dashboard at `cursor.com/agents` where you can start, monitor and control agents from any devicehttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Cursor%E2%80%99s%20Agent%20on%20web%20brings,com%2Fagents.  Features include:
+
+- **Cross‑device continuity** – start a task on your phone and continue it in the desktop IDEhttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Mobile%20installation.
+- **PWA installation** – install the site as a Progressive Web App on iOS or Android for offline support and push notificationshttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Mobile%20installation.
+- **Team collaboration** – team members can review diffs, comment and manage pull requests via the web interfacehttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Team%20collaboration.
+- **Slack notifications** – receive updates on agent progress directly in Slackhttps://docs.cursor.com/background-agent/web-and-mobile#:~:text=Slack%20integration.
+
+---
+
+## 6 Context & Search
+
+### 6.1 Codebase indexing
+
+When a project is opened, Cursor automatically computes vector embeddings for each file.  Indexing updates incrementally as files changehttps://docs.cursor.com/context/codebase-indexing#:~:text=How%20Cursor%20learns%20your%20codebase,for%20better%20understanding.  You can view progress in the status bar and adjust indexing settings (e.g., ignoring files or enabling multi‑root workspaces)https://docs.cursor.com/context/codebase-indexing#:~:text=Configuration.  The index powers search and autocompletion, enabling the Agent to locate relevant files quickly.
+
+### 6.2 @ Symbols
+
+The `@` prefix inserts context into your prompts.  Categories includehttps://docs.cursor.com/context/@-symbols/overview#:~:text=Reference%20code%2C%20files%2C%20and%20documentation,using%20%40%20symbols:
+
+- **@Files / @Folders** – reference one or more files or entire directories.  When referencing a folder, you can include the full content (optionally truncated)https://docs.cursor.com/context/@-symbols/@-files-and-folders#:~:text=%40Files%20%26%20Folders.
+- **@Code** – include code snippets or definitions extracted from the codebase (functions, classes, etc.).
+- **@Docs** – fetch documentation from external sources, often via MCP or built‑in docs.
+- **@Git** – include git commit history, diffs or PR data.
+- **@Past Chats** – reference previous conversation snippets.
+- **@Cursor Rules** – view currently active rules.
+- **@Web** – fetch content from the web (requires internet and may use MCP).
+- **@Link** – fetch content from arbitrary URLs.
+- **@Recent Changes** – show the last changes made in the current session.
+- **@Lint Errors** – insert linting feedback into context.
+- **@Definitions** – insert symbol definitions.
+- **# Files** – add files to context without referencing them directlyhttps://docs.cursor.com/context/@-symbols/overview#:~:text=%2A%20%40Lint%20Errors%20%20,active%20files%20to%20the%20context.
+
+Use `@` references inside Chat or Inline Edit prompts to ensure the model sees the relevant code or docs.  The Agent automatically selects context, but explicit references improve accuracy.
+
+### 6.3 Model Context Protocol (MCP)
+
+MCP allows Cursor to connect to external tools and data sources via standardised transportshttps://docs.cursor.com/context/mcp#:~:text=Why%20use%20MCP%3F.  Highlights:
+
+- **Transport methods** – Tools can run locally (stdio) or remotely via Server‑Sent Events (`SSE`) or Streamable HTTPhttps://docs.cursor.com/context/mcp#:~:text=MCP%20servers%20expose%20capabilities%20through,Cursor%20supports%20three%20transport%20methods.
+- **Configuration** – Create `.cursor/mcp.json` (project‑specific) or `~/.cursor/mcp.json` (global) with the following structurehttps://docs.cursor.com/context/mcp#:~:text=Using%20:
+
+``````
+{
+  "mcpServers": {
+    "tool‑name": {
+      "command": "npx",
+      "args": ["-y", "mcp‑server"],
+      "env": {
+        "API_KEY": "value"
+      }
+    }
+  }
+}
+``````
+
+- **Authentication** – pass secrets via environment variables or OAuth; separate config files for sensitive valueshttps://docs.cursor.com/context/mcp#:~:text=Authentication.
+- **Tool usage** – Tools appear in the Agent UI; click a tool to toggle it on/off.  By default, Agent asks for confirmation before executing a tool; enable *auto‑run* to allow direct executionhttps://docs.cursor.com/context/mcp#:~:text=Using%20MCP%20in%20chat.
+- **Images & binary data** – MCP tools can return images encoded as base64 strings; these are rendered inline in chathttps://docs.cursor.com/context/mcp#:~:text=Images%20as%20context.
+
+MCP effectively turns Cursor into a universal LLM orchestrator, enabling tasks like querying APIs, running remote scripts or fetching proprietary data without leaving the IDE.
+
+---
+
+## 7 Rules for AI
+
+Rules are persistent instructions that guide how models behave.  They control tone, style, architecture, libraries and domain constraints across Chat, Inline Edit and the Agent.  Understanding rule scopes and anatomy is essential.
+
+### 7.1 Rule scopes
+
+1. **User (global) rules** – set in *Cursor Settings → Rules*, these apply to all projectshttps://docs.cursor.com/context/rules#:~:text=Project%20Rules.  Use them for preferences like communication style or default coding conventionshttps://docs.cursor.com/context/rules#:~:text=User%20Rules.
+2. **Project rules** – Markdown‑with‑metadata files stored under `.cursor/rules` in your repositoryhttps://docs.cursor.com/context/rules#:~:text=Project%20rules.  These encode project‑specific standards, architectures or dependencies.  Place additional `.cursor/rules` directories in subfolders to create hierarchical ruleshttps://docs.cursor.com/context/rules#:~:text=Nested%20rules.
+3. **Legacy `.cursorrules`** – a single file at the project root; still supported but deprecated.  Use `.cursor/index.mdc` with `alwaysApply` insteadhttps://docs.cursor.com/context/rules#:~:text=https://docs.cursor.com/context/rules#:~:text=.
+4. **Bugbot rules** – `.cursor/BUGBOT.md` guidelines for the Bugbot code reviewer; nested files are considered based on where changes occurhttps://docs.cursor.com/bugbot#:~:text=Rules.
+5. **Memories** – automatically extracted rules summarising conversations; require user approval and persist per projecthttps://docs.cursor.com/context/memories#:~:text=Memories%20are%20automatically%20generated%20rules,and%20maintain%20context%20across%20sessions.
+
+### 7.2 Rule anatomy (MDC format)
+
+Rules are Markdown documents with a YAML‑like metadata header (`---`).  Key metadata fieldshttps://docs.cursor.com/context/rules#:~:text=Rule%20anatomy:
+
+- `description` – summary shown in the UI; required for non‑always rules.
+- `globs` – list of glob patterns; the rule attaches when editing matching fileshttps://docs.cursor.com/context/rules#:~:text=Rule%20anatomy.
+- `alwaysApply` – boolean; when `true`, the rule is always included in context.
+- `ruleType` – derived from the above: *Always*, *Auto Attached* (triggered by `globs`), *Agent Requested* (explicitly requested by the model) or *Manual* (only included when mentioned)https://docs.cursor.com/context/rules#:~:text=Rule%20anatomy.
+- `priority` – optional; influences ordering when multiple rules apply.
+
+After the metadata header, write the rule’s instructions using bullet points or paragraphs.  You can reference additional files (e.g., `@component-template.tsx`) and those files will be added to the model context when the rule triggershttps://docs.cursor.com/context/rules#:~:text=,use%20snake_case%20for%20service%20names.
+
+### 7.3 Nested rules & context awareness
+
+Place `.cursor/rules` directories within subfolders to create nested rules.  When editing files in a subfolder, the most specific rules (in that folder) attach automatically, followed by parent rules up the directory treehttps://docs.cursor.com/context/rules#:~:text=Nested%20rules.  This organisation allows domain‑specific guidelines (e.g., front‑end vs back‑end) without overloading global context.
+
+### 7.4 Creating and managing rules
+
+Generate rules via *Cursor Settings → Rules*, the command palette or the `/Generate Cursor Rules` chat commandhttps://docs.cursor.com/context/rules#:~:text=Creating%20a%20rule.  Best practices include splitting large rules into separate files, keeping each rule under **500 lines**, providing concrete examples and avoiding vague advicehttps://docs.cursor.com/context/rules#:~:text=Best%20practices.  When adding new rules mid‑conversation, start a new chat or explicitly mention them because context isn’t updated automaticallyhttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=Mid,Best%20Practices.
+
+### 7.5 Three‑step rule strategy
+
+An effective rule strategy uses three layershttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=Cursor%20Project%20Rules%20Files%3A%20When,and%20How%20to%20Use%20Them:
+
+1. **Global user rules** – set your personal communication style and general programming principles (e.g., pure functions, error handling and strict typinghttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=How%20to%20Configure%20Cursor%20Rules,for%20Optimal%20AI%20Coding%20Performancehttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=%3Ccursorrules_error_handling%3E%20,cursorrules_error_handling).  Keep these short and widely applicable.
+2. **Repository‐level index.mdc** – define rules that always apply to the entire repository (e.g., repository architecture, frameworks and naming conventions).  Use `alwaysApply: true` to guarantee inclusion.
+3. **Context‑aware rules** – create separate `.mdc` files in subdirectories for domain‑specific guidance (e.g., `frontend.md` for UI guidelines, `backend.md` for API design).  These rules attach only when editing relevant files, saving token budget and improving specificityhttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=3.%20Split%20into%20Context,a%20bunch%20of%20irrelevant%20guidelines.
+
+### 7.6 Example: global user rule (simplified)
+
+``````
+<cursor rules>
+- Comments must be written in English.
+- Prefer functional programming; avoid mutable state and side effectshttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=How%20to%20Configure%20Cursor%20Rules,for%20Optimal%20AI%20Coding%20Performance.
+- Follow DRY, KISS and YAGNI principles; avoid duplicationhttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=,already%20written%20before%20writing%20it.
+- Use strict typing and named parametershttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=,already%20written%20before%20writing%20it.
+- Raise specific errors; never ignore them silentlyhttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=%3Ccursorrules_error_handling%3E%20,cursorrules_error_handling.
+- For Python, prefer `pydantic` models and avoid `Any` and `@staticmethod`https://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=%3Ccursorrules_python_specifics%3E%20,Result%3A%60%20%3C%2Fcursorrules_python_specifics.
+- Run non‑interactive Git commands; avoid interactive promptshttps://kirill-markin.com/articles/cursor-ide-rules-for-ai/#:~:text=%3Ccursorrules_terminal_usage%3E%20,cursorrules_terminal_usage.
+``````
+
+### 7.7 Example: project rule with metadata
+
+``````
+---
+description: Standards for front‑end components
+globs:
+  - src/components/**/*.tsx
+alwaysApply: false
+---
+- Use Tailwind CSS for stylinghttps://docs.cursor.com/context/rules#:~:text=This%20rule%20provides%20standards%20for,components%3AWhen%20working%20in%20components%20directory.
+- Use Framer Motion for animationshttps://docs.cursor.com/context/rules#:~:text=,Follow%20component%20naming%20conventions.
+- Follow component naming conventions; export default components.
+- Export types generated from Zod schemashttps://docs.cursor.com/context/rules#:~:text=This%20rule%20enforces%20validation%20for,API%20endpoints%3AIn%20API%20directory.
+@component‑template.tsx
+``````
+
+### 7.8 Memories
+
+**Memories** are automatically generated rules extracted from your conversations by a sidecar modelhttps://docs.cursor.com/context/memories#:~:text=Memories%20are%20automatically%20generated%20rules,and%20maintain%20context%20across%20sessions.  When Cursor detects a potentially useful fact, it prompts you to approve saving it as a memory.  Approved memories persist per project and appear in the *Rules* page.  They can encode domain knowledge, decisions or definitions you’ve discussed, reducing the need to repeat information.  Manage memories via the *Rules* settings pagehttps://docs.cursor.com/context/memories#:~:text=Manage%20memories.
+
+---
+
+## 8 Bugbot: AI Code Review
+
+**Bugbot** reviews pull‑request diffs and comments on bugs, security issues and code quality problemshttps://docs.cursor.com/bugbot#:~:text=AI%20code%20review%20for%20pull,requests.  Key points:
+
+- **Triggering** – Bugbot runs automatically on each PR update or can be triggered manually by commenting `cursor review` or `bugbot run`https://docs.cursor.com/bugbot#:~:text=How%20it%20works.
+- **Setup** – Connect Cursor to GitHub via the dashboard; enable Bugbot for specific repositorieshttps://docs.cursor.com/bugbot#:~:text=Requires%20Cursor%20admin%20access%20and,GitHub%20org%20admin%20access.  Personal settings allow running Bugbot only when mentioned or only once per PRhttps://docs.cursor.com/bugbot#:~:text=Personal%20settings.
+- **Guidelines** – Place `.cursor/BUGBOT.md` files at the repository root and within subdirectories to provide context.  Bugbot always includes the root guideline and traverses nested guidelines based on changed fileshttps://docs.cursor.com/bugbot#:~:text=Rules.  Typical guidelines cover security focus areas (e.g., input validation, SQL injection), architecture patterns (dependency injection, repository pattern) and common issues (memory leaks, missing error boundaries)https://docs.cursor.com/bugbot#:~:text=Example%20.
+- **Pricing** – $40/month for unlimited reviews on up to 200 PRshttps://docs.cursor.com/bugbot#:~:text=Pricing.
+
+---
+
+## 9 Additional tools & integrations
+
+- **CLI commands** – Install `cursor` and `code` commands via the Command Palette.  Run `cursor <file>` to open a file or `cursor <directory>` to open a projecthttps://docs.cursor.com/configuration/shell#:~:text=Install%20and%20use%20Cursor%20shell,commands.  Options include `--new‑window` to open in a new window and `--wait` to block until the window closeshttps://docs.cursor.com/configuration/shell#:~:text=Command%20options.
+- **Terminal quick commands** – Within the integrated terminal, press `Ctrl+K` and describe a command; Cursor generates the shell command for youhttps://docs.cursor.com/inline-edit/terminal#:~:text=Terminal.
+- **Slack integration** – Mention `@Cursor` in Slack threads to start background agents or receive updateshttps://cursor.com/changelog#:~:text=You%20can%20now%20launch%20Background,all%20without%20leaving%20the%20conversation.  Admins must install the Cursor Slack app and connect GitHubhttps://cursor.com/changelog#:~:text=To%20use%20Background%20Agents%20in,the%20Dashboard%20%E2%86%92%20Integrations%20page.
+- **PR search & Git integration** – Use `@[PR number]`, `@[commit hash]` or `@[branch name]` to fetch pull requests, commits or branches into contexthttps://docs.cursor.com/context/codebase-indexing#:~:text=PR%20search.  Cursor indexes PR comments and Bugbot reviews to provide full context.
+- **Keyboard shortcuts & themes** – Customize keybindings and appearance via *Cursor Settings*.
+- **Security & privacy** – Cursor runs in privacy mode by default; code is processed only for the current session and is not used to train models.  Background agents run in isolated containers with encrypted secretshttps://docs.cursor.com/background-agent#:~:text=Setup.
+
+---
+
+## 10 Conclusion
+
+Cursor combines powerful autocompletion, natural‑language editing, autonomous agents, context rules, remote agents and integrations to create a unified AI coding environment.  The **Rules for AI** system lets you encode domain knowledge and enforce coding standards, while features like Tab, Inline Edit and the Agent enable efficient editing and refactoring.  By understanding the structure and purpose of each feature—particularly the interplay between context, search, rules and planning—you can harness Cursor’s full potential for accurate, safe and productive AI‑assisted development.
